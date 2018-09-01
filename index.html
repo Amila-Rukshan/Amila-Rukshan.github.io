@@ -33,6 +33,9 @@
               <a class="nav-link js-scroll-trigger" href="#about">About</a>
             </li>
             <li class="nav-item">
+                <a class="nav-link js-scroll-trigger" href="#learderboard">Learderboard</a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link js-scroll-trigger" href="#contact">Contact</a>
             </li>
           </ul>
@@ -60,27 +63,30 @@
       </div>
     </section>
     
-    <div class="container">
-        <table  id="table" class="table table-bordered" style="border: 1px solid: #ddd !important;">
-        <thead>
-            <tr>
-                <th data-field="level">Level</th>
-                <th data-field="score">Highscore</th>
-                <th data-field="alignment">Sequence Alignment</th>
-                <th data-field="player">Player</th>
-            </tr>
-        </thead>
-        <tbody>
-          <tr>
-              <td>L2</td>
-              <td>I65</td>
-              <td>1: G0 T1 T2 T3 C4 T5 C6 T7 A8 C9 C10 G11 G12 C13 G14 2: G0 T1 T2 T3 C4 T5 C6 T7 A8 C9 C10 G11 G12 C13 G14 A(1,2): G0 T1 T2 T3 C4 T5 C6 T7 A8 C9 C10 G11 G12 C13 G14 3: C0 T1 T2 T3 C4 T5 C6 C7 C8 C9 C10 G11 G12 C13 G14 A(A12,3): G0 T1 T2 T3 C4 T5 C6 T7 A8 C9 C10 G11 G12 C13 G14 4: G0 T1 T2 G3 T4 T5 T6 C7 A8 C9 C10 C11 C13 T14 A15 G16 C17 C18 G19 A(A(A12,3),4): G0 T1 T2 T3 C4 T5 C6 T7 A8 C9 C10 G11 G12 C13 G14 A15 G16 C17 C18 G19</td>
-              <td>Alice</td>
-          </tr>
-          
-      </tbody>
-    </table>
-    </div>
+    <section id="learderboard">
+        <div class="container">
+          <div class="row">
+            <div class="col-lg-8 mx-auto">
+              <h4 align="center">Genenigma Learderboard</h4>
+              <p align="center" class="lead"><br>Learderboard shows the highscores for each level in the game, its sequence alignment, and the player</p>
+            </div>
+          </div>
+          <table  id="table" class="table table-bordered" style="border: 1px solid: #ddd !important;">
+              <thead>
+                  <tr>
+                      <th data-field="level">Level</th>
+                      <th data-field="score">Score</th>
+                      <th data-field="alignment">Sequence Alignment</th>
+                      <th data-field="player">Player</th>
+                  </tr>
+              </thead>
+          </table>
+        </div>
+      </section>
+
+
+
+
 
     <section id="contact">
       <div class="container">
@@ -104,14 +110,110 @@
     <!-- Bootstrap core JavaScript -->
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="bootstrap-table.js"></script>
+    <!-- <script src="bootstrap-table.js"></script> -->
     <!-- Plugin JavaScript -->
     <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
 
     <!-- Custom JavaScript for this theme -->
     <script src="js/scrolling-nav.js"></script>
     
-    <script src="bootstrap-table-zh-CN.js"></script>
+    <!-- <script src="bootstrap-table-zh-CN.js"></script> -->
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.10.1/bootstrap-table.min.js"></script>
+    <script scr"index.js"></script>
+    <script>
+      
+      
+      
+      let arr = [];
+      let highScoreArr = [];
+      let levelArr = [];
+      $.get('https://dna-msa.firebaseio.com/players.json').then(function(data) {
+  
+        Object.keys(data).forEach(function(key) {
+          Object.keys(data[key]).forEach(function(playedLevel){
+
+            if(levelArr.indexOf(playedLevel) < 0){
+              levelArr.push(playedLevel);
+            }
+
+            arr.push({
+                    level: playedLevel,
+                    score: data[key][playedLevel].score,
+                    alignment:data[key][playedLevel].sequenceAlignment, 
+                    player: key
+                  });
+
+          }) 
+        })
+
+        var sort_by = function() {
+          var fields = [].slice.call(arguments),
+              n_fields = fields.length;
+
+          return function(A, B) {
+              var a, b, field, key, primer, reverse, result;
+              for (var i = 0, l = n_fields; i < l; i++) {
+                  result = 0;
+                  field = fields[i];
+
+                  key = typeof field === 'string' ? field : field.name;
+
+                  a = A[key];
+                  b = B[key];
+
+                  if (typeof field.primer !== 'undefined') {
+                      a = field.primer(a);
+                      b = field.primer(b);
+                  }
+
+                  reverse = (field.reverse) ? -1 : 1;
+
+                  if (a < b) result = reverse * -1;
+                  if (a > b) result = reverse * 1;
+                  if (result !== 0) break;
+              }
+              return result;
+          }
+        }   
+        
+        arr.sort(sort_by('level', {
+          name: 'score',
+          primer: parseInt,
+          reverse: true
+        }));
+        
+
+        for(var i = 0 ; i < levelArr.length ; i++ ){
+            var newArray = arr.filter(function (element) {
+            return element.level == levelArr[i];
+          });
+
+          var highScore = newArray[0].score;
+          console.log(highScore); 
+          var newArray2 = newArray.filter(function (element) {
+            if(element.score == highScore){
+              highScoreArr.push(element);
+            }
+          });
+
+        }
+      
+
+        // this.table1.data = [...arr]
+        var $table = $('#table');
+        $(function () {
+          $('#table').bootstrapTable({
+              data: highScoreArr
+          });
+        });
+
+      })
+
+    
+    </script>
 
   </body>
 
